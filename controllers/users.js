@@ -52,7 +52,10 @@ module.exports.updateUser = (req, res) => {
       return res.send(user);
     })
     .catch((err) => {
-      res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.message && err.message.indexOf('ValidationError:')) {
+        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      }
+      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
     });
 };
 
@@ -67,6 +70,9 @@ module.exports.updateAvatar = (req, res) => {
       return res.send({ user });
     })
     .catch((err) => {
-      res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.message && err.message.indexOf('ValidationError:')) {
+        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      }
+      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
     });
 };
