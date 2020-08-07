@@ -1,12 +1,5 @@
 const mongoose = require('mongoose');
-const validate = require('mongoose-validator');
-
-const urlValidator = [
-  validate({
-    validator: 'isURL',
-    message: 'Неверный формат URL',
-  }),
-];
+const { urlValidator } = require('./validate');
 
 const userSchema = new mongoose.Schema({
   name: {

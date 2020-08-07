@@ -15,9 +15,12 @@ module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   Card
     .create({ name, link, owner: req.user._id })
-    .then((cards) => res.send({ message: `Карта  ${cards.name} добавлена` }))
+    .then((card) => res.send(card))
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.message && err.message.indexOf('ValidationError:')) {
+        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      }
+      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
     });
 };
 
@@ -26,9 +29,9 @@ module.exports.deleteCard = (req, res) => {
     .findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: 'Карточка не найдена' });
+        return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      res.send({ message: ` Карточка ${card.name} удалена ` });
+      return res.send({ message: ` Карточка ${card.name} удалена ` });
     })
     .catch((err) => {
       res.status(500).send({ message: ` Произошла ошибка ${err} ` });
@@ -43,7 +46,10 @@ module.exports.likeCard = (req, res) => {
       { new: true },
     )
     .then((card) => {
-      res.send({ message: ` Лайк  поставлен карточки ${card.name} ` });
+      if (!card) {
+        return res.status(404).send({ message: 'Карточка не найдена' });
+      }
+      return res.send({ card });
     })
     .catch((err) => {
       res.status(500).send({ message: ` Произошла ошибка ${err} ` });
@@ -58,7 +64,10 @@ module.exports.dislikeCard = (req, res) => {
       { new: true },
     )
     .then((card) => {
-      res.send({ message: ` Лайк у карточки карточки ${card.name}  снят` });
+      if (!card) {
+        return res.status(404).send({ message: 'Карточка не найдена' });
+      }
+      return res.send({ card });
     })
     .catch((err) => {
       res.status(500).send({ message: ` Произошла ошибка ${err} ` });

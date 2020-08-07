@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marityz/work12.git"
+    "url": "git+https://github.com/marityz/work13.git"
   },
   "author": "Avinkina Marina",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/marityz/work12/issues"
+    "url": "https://github.com/marityz/work13/issues"
   },
-  "homepage": "https://github.com/marityz/work12",
+  "homepage": "https://github.com/marityz/work13",
   "devDependencies": {
     "eslint": "^7.5.0",
     "eslint-config-airbnb-base": "^14.2.0",

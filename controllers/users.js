@@ -3,8 +3,8 @@ const User = require('../models/user');
 module.exports.getUsers = (req, res) => {
   User
     .find({})
-    .then((Users) => {
-      res.send(Users);
+    .then((users) => {
+      res.send(users);
     })
     .catch((err) => {
       res.status(500).send({ message: ` Произошла ошибка ${err} ` });
@@ -30,11 +30,14 @@ module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User
     .create({ name, about, avatar })
-    .then((users) => {
-      res.send({ message: `Пользователь ${users.name} добавлен` });
+    .then((user) => {
+      res.send({ message: `Пользователь ${user.name} добавлен` });
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.message && err.message.indexOf('ValidationError:')) {
+        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      }
+      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
     });
 };
 
@@ -46,7 +49,7 @@ module.exports.updateUser = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
       }
-      return res.send({ message: `Данные профиля пользователя ${req.user._id} изменены` });
+      return res.send(user);
     })
     .catch((err) => {
       res.status(400).send({ message: ` Произошла ошибка ${err} ` });
@@ -61,7 +64,7 @@ module.exports.updateAvatar = (req, res) => {
       if (!user) {
         return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
       }
-      return res.send({ message: `Картинка профиля пользователя ${req.user._id} изменена` });
+      return res.send({ user });
     })
     .catch((err) => {
       res.status(400).send({ message: ` Произошла ошибка ${err} ` });
