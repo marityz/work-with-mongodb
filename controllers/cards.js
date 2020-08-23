@@ -26,16 +26,21 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card
-    .findByIdAndRemove(req.params.cardId)
+    .findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.send({ message: ` Карточка ${card.name} удалена ` });
+      return Card.findOneAndRemove({ _id: req.params.id, owner: req.user._id })
+        .then((found) => {
+          if (!found) {
+            return res.status(403).send({ message: 'Нет прав на удаление' });
+          }
+          return res.send({ message: 'Удалена' });
+        })
+        .catch((err) => res.status(500).send({ message: err.message }));
     })
-    .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
-    });
+    .catch((err) => res.status(500).send({ message: ` Произошла ошибка ${err} ` }));
 };
 
 module.exports.likeCard = (req, res) => {

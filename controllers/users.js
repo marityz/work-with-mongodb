@@ -1,3 +1,5 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
@@ -26,12 +28,42 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User
-    .create({ name, about, avatar })
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
     .then((user) => {
-      res.send({ message: `Пользователь ${user.name} добавлен` });
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+};
+
+module.exports.createUser = (req, res) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  if (!password) return res.status(400).send({ message: 'Поле "пароль" должно быть заполнено' });
+  return bcrypt.hash(password, 10)
+    .then((hash) => User
+      .findOne({ email })
+      .then((user) => {
+        if (user !== null) {
+          return res.status(400).send({ message: 'Пользователь с этим email  уже существует' });
+        }
+        return hash;
+      })
+      .catch((err) => res.status(400).send({ message: ` Произошла ошибка ${err} ` })))
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((user) => {
+      res.status(201).send({
+        _id: user._id,
+        email: user.email,
+      });
     })
     .catch((err) => {
       if (err.message && err.message.indexOf('ValidationError:')) {
@@ -44,7 +76,7 @@ module.exports.createUser = (req, res) => {
 module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
   User
-    .findByIdAndUpdate(req.user._id, { name, about }, { runValidators: true })
+    .findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
@@ -62,7 +94,7 @@ module.exports.updateUser = (req, res) => {
 module.exports.updateAvatar = (req, res) => {
   const { avatar } = req.body;
   User
-    .findByIdAndUpdate(req.user._id, { avatar }, { runValidators: true })
+    .findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
