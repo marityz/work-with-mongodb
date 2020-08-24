@@ -9,7 +9,7 @@ module.exports.getUsers = (req, res) => {
       res.send(users);
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      res.status(500).send({ message: err.message });
     });
 };
 
@@ -24,7 +24,7 @@ module.exports.getUserById = (req, res) => {
       return res.send(user);
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      res.status(500).send({ message: err.message });
     });
 };
 
@@ -34,7 +34,11 @@ module.exports.login = (req, res) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
-      res.send({ token });
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      })
+        .end();
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
@@ -46,16 +50,8 @@ module.exports.createUser = (req, res) => {
     name, about, avatar, email, password,
   } = req.body;
   if (!password) return res.status(400).send({ message: 'Поле "пароль" должно быть заполнено' });
+  if (password.length < 8) return res.status(400).send({ message: 'Минимальный пароль из 8 символов должен состоять' });
   return bcrypt.hash(password, 10)
-    .then((hash) => User
-      .findOne({ email })
-      .then((user) => {
-        if (user !== null) {
-          return res.status(400).send({ message: 'Пользователь с этим email  уже существует' });
-        }
-        return hash;
-      })
-      .catch((err) => res.status(400).send({ message: ` Произошла ошибка ${err} ` })))
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
@@ -66,10 +62,10 @@ module.exports.createUser = (req, res) => {
       });
     })
     .catch((err) => {
-      if (err.message && err.message.indexOf('ValidationError:')) {
-        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'MongoError' && err.code === 11000) {
+        return res.status(409).send({ message: 'Пользователь с таким email уже существует' });
       }
-      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      return res.status(500).send({ message: err.message });
     });
 };
 
@@ -84,10 +80,10 @@ module.exports.updateUser = (req, res) => {
       return res.send(user);
     })
     .catch((err) => {
-      if (err.message && err.message.indexOf('ValidationError:')) {
-        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: err.message });
       }
-      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      return res.status(500).send({ message: err.message });
     });
 };
 
@@ -102,9 +98,9 @@ module.exports.updateAvatar = (req, res) => {
       return res.send({ user });
     })
     .catch((err) => {
-      if (err.message && err.message.indexOf('ValidationError:')) {
-        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: err.message });
       }
-      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      return res.status(500).send({ message: err.message });
     });
 };

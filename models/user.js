@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-const { urlValidator, emailValidator } = require('./validate');
 const bcrypt = require('bcryptjs');
+
+const { urlValidator, emailValidator } = require('./validate');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -28,7 +29,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: [true, 'Поле "пароль" обязательно для заполнения'],
     select: false,
   },
 });
