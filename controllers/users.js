@@ -24,7 +24,10 @@ module.exports.getUserById = (req, res) => {
       return res.send(user);
     })
     .catch((err) => {
-      res.status(500).send({ message: err.message });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Передан некорректный id пользовтеля' });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
 
@@ -64,6 +67,9 @@ module.exports.createUser = (req, res) => {
     .catch((err) => {
       if (err.name === 'MongoError' && err.code === 11000) {
         return res.status(409).send({ message: 'Пользователь с таким email уже существует' });
+      }
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: err.message });
       }
       return res.status(500).send({ message: err.message });
     });
