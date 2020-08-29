@@ -7,7 +7,7 @@ module.exports.getCards = (req, res) => {
       res.send(сards);
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      res.status(500).send({ message: err.message });
     });
 };
 
@@ -17,24 +17,31 @@ module.exports.createCard = (req, res) => {
     .create({ name, link, owner: req.user._id })
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.message && err.message.indexOf('ValidationError:')) {
-        return res.status(400).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: err.message });
       }
-      return res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      return res.status(500).send({ message: err.message });
     });
 };
 
 module.exports.deleteCard = (req, res) => {
   Card
-    .findByIdAndRemove(req.params.cardId)
+    .findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         return res.status(404).send({ message: 'Карточка не найдена' });
       }
-      return res.send({ message: ` Карточка ${card.name} удалена ` });
+      if (card.owner._id.toString() === req.user._id) {
+        card.remove(req.params.cardId);
+        return res.status(200).send({ message: 'Карточка удалена' });
+      }
+      return res.status(403).send({ message: 'Недостаточно прав' });
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Передан некорректный id карточки' });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
 
@@ -52,7 +59,10 @@ module.exports.likeCard = (req, res) => {
       return res.send({ card });
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Передан некорректный id карточки' });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
 
@@ -70,6 +80,9 @@ module.exports.dislikeCard = (req, res) => {
       return res.send({ card });
     })
     .catch((err) => {
-      res.status(500).send({ message: ` Произошла ошибка ${err} ` });
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Передан некорректный id карточки' });
+      }
+      return res.status(500).send({ message: err.message });
     });
 };
