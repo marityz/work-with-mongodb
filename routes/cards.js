@@ -6,7 +6,7 @@ const { likeCard, dislikeCard } = require('../controllers/cards.js');
 cardsRouter.get('/', getCards);
 cardsRouter.post('/', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
+    name: Joi.string().required().min(2).max(40),
     link: Joi.string().required().uri(),
   }),
 }), createCard);

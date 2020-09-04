@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const BadReqError = require('../errors/400-bad-request-err');
 const NotFoundError = require('../errors/404-not-found-err');
+const ConflictError = require('../errors/409-conflict-err');
 
 module.exports.getUsers = (req, res, next) => {
   User
@@ -43,12 +43,7 @@ module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!password) {
-    throw new BadReqError('Поле "пароль" должно быть заполнено');
-  }
-  if (password.length < 8) {
-    throw new BadReqError('Минимальный пароль из 8 символов должен состоять');
-  } return bcrypt.hash(password, 10)
+  return bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
@@ -57,6 +52,13 @@ module.exports.createUser = (req, res, next) => {
         _id: user._id,
         email: user.email,
       });
+    })
+    .catch((err) => {
+      if (ConflictError.isValidConflictError(err)) {
+        throw new ConflictError('Пользователь с таким email уже существует');
+      } else {
+        throw err;
+      }
     })
     .catch(next);
 };
