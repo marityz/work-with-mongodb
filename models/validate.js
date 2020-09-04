@@ -13,3 +13,4 @@ module.exports.emailValidator = [
     message: (props) => `${props.value} некорректный email!`,
   }),
 ];
+

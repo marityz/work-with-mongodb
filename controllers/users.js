@@ -1,37 +1,30 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const BadReqError = require('../errors/400-bad-request-err');
+const NotFoundError = require('../errors/404-not-found-err');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User
     .find({})
     .then((users) => {
       res.send(users);
     })
-    .catch((err) => {
-      res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.id)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({
-          message: `Пользователь с id=${req.params.id} не найден`,
-        });
+        throw new NotFoundError('Пользователь с таким id не найден');
       }
       return res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Передан некорректный id пользовтеля' });
-      }
-      return res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -43,18 +36,19 @@ module.exports.login = (req, res) => {
       })
         .end();
     })
-    .catch((err) => {
-      res.status(401).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
-  if (!password) return res.status(400).send({ message: 'Поле "пароль" должно быть заполнено' });
-  if (password.length < 8) return res.status(400).send({ message: 'Минимальный пароль из 8 символов должен состоять' });
-  return bcrypt.hash(password, 10)
+  if (!password) {
+    throw new BadReqError('Поле "пароль" должно быть заполнено');
+  }
+  if (password.length < 8) {
+    throw new BadReqError('Минимальный пароль из 8 символов должен состоять');
+  } return bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
@@ -64,49 +58,31 @@ module.exports.createUser = (req, res) => {
         email: user.email,
       });
     })
-    .catch((err) => {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        return res.status(409).send({ message: 'Пользователь с таким email уже существует' });
-      }
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: err.message });
-      }
-      return res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User
     .findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
+        throw new NotFoundError('Пользователь с таким id не найден');
       }
       return res.send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: err.message });
-      }
-      return res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User
     .findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: `Пользователь с ${req.user._id} не найден` });
+        throw new NotFoundError('Пользователь с таким id не найден');
       }
       return res.send({ user });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: err.message });
-      }
-      return res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
