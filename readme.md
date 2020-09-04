@@ -3,7 +3,8 @@
 ## Описание проекта: загрузка изображения с сервера с целью отлайкать.
 ## Так же можно редактировать профиль, добавлять/удалять картинки, создавать свой аккаунт.
 
-### Инструкция:
+### Инструкция для локального использования:
+
 Для запуска установите зависимости:
  - npm install
 
@@ -37,6 +38,24 @@
 8. PUT localhost:3000/cards/:cardId/likes — поставить лайк карточке
 9. DELETE localhost:3000/cards/:cardId/likes — убрать лайк с карточки
 
+# Теперь сервис доступен и онлайн:
+### Авторизация 
+1. POST  https://www.marityz.tk/signup - создает уникального пользователя (обязательные поля name, about, link, email, password.)
+2. POST https://www.marityz.tk/signin - возвращает токен, вход в аккаунт (обязательные поля email, password)
+###  Использование 
+1. GET https://www.marityz.tk/users возвращает	JSON-список всех пользователей;
+2. GET https://www.marityz.tk/users/:userId(где userId - id пользователя)  возвращает пользователя по _id;
+3. POST https://www.marityz.tk/users создаёт пользователя;
+4. GET https://www.marityz.tk/cards возвращает JSON-список всех карточек;
+5. POST https://www.marityz.tk/cards создаёт карточку;
+6. DELETE https://www.marityz.tk/cards/:cardId (где cardId - id конкретной карточки) удаляет карточку по идентификатору;
+7. PATCH https://www.marityz.tk/users/me - обновляет профиль;
+8. PUT https://www.marityz.tk/cards/:cardId/likes — поставить лайк карточке
+9. DELETE https://www.marityz.tk/cards/:cardId/likes — убрать лайк с карточки
+
+IP: 178.154.226.220
+[Ссылка на проект]( https://marityz.tk )
+
 
 
 ### v0.0.3(в рамках спринта 15) 
@@ -45,4 +64,4 @@
 Html, Css, Js.
 База данных реализована на Mongo
 
-[Ссылка на проект]( https://marityz.tk )
+
