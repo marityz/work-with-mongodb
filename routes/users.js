@@ -2,12 +2,13 @@ const usersRouter = require('express').Router();
 const { Joi, celebrate } = require('celebrate');
 const { getUsers, getUserById } = require('../controllers/users.js');
 const { updateUser, updateAvatar } = require('../controllers/users.js');
+const { isUrlValidate } = require('../models/url-valid');
 
 usersRouter.get('/', getUsers);
 
 usersRouter.get('/:id', celebrate({
   params: Joi.object().keys({
-    id: Joi.string().alphanum().length(24),
+    id: Joi.string().hex().length(24),
   }),
 }), getUserById);
 
@@ -20,7 +21,7 @@ usersRouter.patch('/me', celebrate({
 
 usersRouter.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().uri(),
+    avatar: Joi.string().required().custom(isUrlValidate),
   }),
 }), updateAvatar);
 module.exports = usersRouter;

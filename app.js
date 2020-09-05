@@ -66,5 +66,6 @@ app.use(errors());
 app.use(ErrorMiddleware);
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`Номер порта на котором запущен сервис: ${PORT}`);
 });
