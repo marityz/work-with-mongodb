@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const usersRoutes = require('./routes/users');
 const cardsRoutes = require('./routes/cards.js');
+const { nonExistentPaths } = require('./controllers/non-existent-paths');
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
@@ -59,9 +60,7 @@ app.post('/signup', celebrate({
 app.use(auth);
 app.use('/cards', cardsRoutes);
 app.use('/users', usersRoutes);
-app.use('/*', (req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
-});
+app.use('/*', nonExistentPaths);
 app.use(errorLogger);
 app.use(errors());
 app.use(ErrorMiddleware);
